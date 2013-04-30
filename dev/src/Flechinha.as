@@ -13,31 +13,31 @@ package
 		private var body:Sprite = new Sprite();
 		private var _comp:Number = 50;
 		private var _angle:Number = 0;
+		private var cor:uint;
 		
-		
-		public function Flechinha() 
+		public function Flechinha(cor:uint, movable:Boolean = true) 
 		{
+			this.cor = cor;
 			head.x = comp;
-			
-			head.buttonMode = true;
-			body.buttonMode = true;
 			
 			this.addChild(body);
 			this.addChild(head);
 			
 			startHead();
-			addListeners();
 			draw();
+			
+			if (movable) addListeners();
+			else this.mouseChildren = false;
 		}
 		
 		private function startHead():void
 		{
-			head.graphics.beginFill(0xFF8080, 0.1);
+			head.graphics.beginFill(0xFF8080, 0);
 			head.graphics.drawCircle(15 / 3, 0, 15);
 			head.graphics.endFill();
 			
-			head.graphics.beginFill(0x000000, 1);
-			head.graphics.lineStyle(1, 0x000000);
+			head.graphics.beginFill(cor, 1);
+			head.graphics.lineStyle(1, cor);
 			head.graphics.moveTo(0, 0);
 			head.graphics.lineTo(0, 5);
 			head.graphics.lineTo(15, 0);
@@ -48,6 +48,9 @@ package
 		
 		private function addListeners():void 
 		{
+			head.buttonMode = true;
+			body.buttonMode = true;
+			
 			head.addEventListener(MouseEvent.MOUSE_DOWN, initDrag);
 			body.addEventListener(MouseEvent.MOUSE_DOWN, initDrag);
 		}
@@ -69,8 +72,10 @@ package
 				this.x = this.parent.mouseX - localPosClick.x;
 				this.y = this.parent.mouseY - localPosClick.y;
 			}else {
-				head.x = this.mouseX;
-				head.y = this.mouseY;
+				//head.x = this.mouseX;
+				//head.y = this.mouseY;
+				_angle = Math.atan2(this.mouseY - body.y, this.mouseX - body.x);
+				updateHeadPos();
 				draw();
 			}
 		}
@@ -85,16 +90,16 @@ package
 		
 		private function draw():void 
 		{
-			_angle = Math.atan2(head.y - body.y, head.x - body.x);
-			_comp = Point.distance(new Point(0,0), new Point(head.x, head.y));
+			//_angle = Math.atan2(head.y - body.y, head.x - body.x);
+			//_comp = Point.distance(new Point(0,0), new Point(head.x, head.y));
 			
 			body.graphics.clear();
 			
-			body.graphics.lineStyle(30, 0xFF8080, 0.1);
+			body.graphics.lineStyle(30, 0xFF8080, 0);
 			body.graphics.moveTo(0, 0);
 			body.graphics.lineTo(head.x, head.y);
 			
-			body.graphics.lineStyle(2, 0x000000);
+			body.graphics.lineStyle(2, cor);
 			body.graphics.moveTo(0, 0);
 			body.graphics.lineTo(head.x, head.y);
 			

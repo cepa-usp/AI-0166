@@ -3,6 +3,7 @@ package
 	import flash.display.Sprite;
 	import flash.events.Event;
 	import flash.events.KeyboardEvent;
+	import flash.events.MouseEvent;
 	import flash.geom.Rectangle;
 	import flash.ui.Keyboard;
 	
@@ -12,13 +13,20 @@ package
 	 */
 	public class Main extends Sprite 
 	{
+		private const corGravidade:uint = 0xDD0000;
+		private const corPressao:uint = 0x0000FF;
+		
 		private var layer_moldura:Sprite = new Sprite();
+		private var layer_flechas:Sprite = new Sprite();
 		
-		private var flechaGravidade:Flechinha = new Flechinha();
-		private var flechaPressao:Flechinha = new Flechinha();
+		private var flechaGravidade:Flechinha = new Flechinha(corGravidade, false);
+		private var flechaPressao:Flechinha = new Flechinha(corPressao, false);
 		
-		private var campo1:Campo = new Campo("campo1");
-		private var campo2:Campo = new Campo("campo2");
+		private var campo1:Campo = new CampoG();
+		private var campo2:Campo = new CampoP();
+		
+		private var flechasG:Vector.<Flechinha> = new Vector.<Flechinha>();
+		private var flechasP:Vector.<Flechinha> = new Vector.<Flechinha>();
 		
 		public function Main():void 
 		{
@@ -33,23 +41,27 @@ package
 			
 			this.scrollRect = new Rectangle(0, 0, 600, 500);
 			
-			flechaGravidade.x = 50;
-			flechaGravidade.y = 400;
+			flechaGravidade.x = 60;
+			flechaGravidade.y = 465;
 			
-			flechaPressao.x = 200;
-			flechaPressao.y = 400;
+			flechaPressao.x = 180;
+			flechaPressao.y = 465;
 			
 			addChild(flechaGravidade);
 			addChild(flechaPressao);
 			
-			campo1.x = 350;
-			campo1.y = 300;
+			flechaGravidade.addEventListener(MouseEvent.MOUSE_DOWN, flechaDown);
+			flechaPressao.addEventListener(MouseEvent.MOUSE_DOWN, flechaDown);
 			
-			campo2.x = 350;
-			campo2.y = 400;
+			campo1.x = 360;
+			campo1.y = 465;
+			
+			campo2.x = 510;
+			campo2.y = 465;
 			
 			addChild(campo1);
 			addChild(campo2);
+			addChild(layer_flechas);
 			
 			layer_moldura.graphics.lineStyle(4, 0xC0C0C0);
 			layer_moldura.graphics.lineTo(600, 0);
@@ -60,6 +72,39 @@ package
 			
 			
 			stage.addEventListener(KeyboardEvent.KEY_UP, keyboardHandler);
+		}
+		
+		private var flechaDrag:Flechinha;
+		private function flechaDown(e:MouseEvent):void 
+		{
+			var newFlecha:Flechinha;
+			if (Sprite(e.target) == flechaGravidade) {
+				newFlecha = new Flechinha(corGravidade);
+				flechasG.push(newFlecha);
+			}else {
+				newFlecha = new Flechinha(corPressao);
+				flechasP.push(newFlecha);
+			}
+			flechaDrag = newFlecha;
+			flechaDrag.x = stage.mouseX;
+			flechaDrag.y = stage.mouseY;
+			layer_flechas.addChild(flechaDrag);
+			
+			stage.addEventListener(MouseEvent.MOUSE_MOVE, moveNewFlecha);
+			stage.addEventListener(MouseEvent.MOUSE_UP, stopMoveFlecha);
+		}
+		
+		private function moveNewFlecha(e:MouseEvent):void 
+		{
+			flechaDrag.x = stage.mouseX;
+			flechaDrag.y = stage.mouseY;
+		}
+		
+		private function stopMoveFlecha(e:MouseEvent):void 
+		{
+			stage.removeEventListener(MouseEvent.MOUSE_MOVE, moveNewFlecha);
+			stage.removeEventListener(MouseEvent.MOUSE_UP, stopMoveFlecha);
+			flechaDrag = null;
 		}
 		
 		private var state:Object;
@@ -78,17 +123,27 @@ package
 		{
 			var state:Object = new Object();
 			
-			state.f1 = new Object();
-			state.f1.x = flechaGravidade.x;
-			state.f1.y = flechaGravidade.y;
-			state.f1.c = flechaGravidade.comp;
-			state.f1.a = flechaGravidade.angle;
+			state.fg = new Object();
+			state.fg.l = flechasG.length;
+			for (var i:int = 0; i < flechasG.length; i++) 
+			{
+				state.fg[i] = new Object();
+				state.fg[i].x = flechasG[i].x;
+				state.fg[i].y = flechasG[i].y;
+				//state.fg[i].c = flechasG[i].comp;
+				state.fg[i].a = flechasG[i].angle;
+			}
 			
-			state.f2 = new Object();
-			state.f2.x = flechaPressao.x;
-			state.f2.y = flechaPressao.y;
-			state.f2.c = flechaPressao.comp;
-			state.f2.a = flechaPressao.angle;
+			state.fp = new Object();
+			state.fp.l = flechasP.length;
+			for (i = 0; i < flechasP.length; i++) 
+			{
+				state.fp[i] = new Object();
+				state.fp[i].x = flechasP[i].x;
+				state.fp[i].y = flechasP[i].y;
+				//state.fp[i].c = flechasP[i].comp;
+				state.fp[i].a = flechasP[i].angle;
+			}
 			
 			state.c1 = new Object();
 			state.c1.x = campo1.x;
@@ -103,21 +158,61 @@ package
 		
 		private function recoverState(state:Object):void
 		{
-			flechaGravidade.x = state.f1.x;
-			flechaGravidade.y = state.f1.y;
-			flechaGravidade.comp = state.f1.c;
-			flechaGravidade.angle = state.f1.a;
+			reset();
 			
-			flechaPressao.x = state.f2.x;
-			flechaPressao.y = state.f2.y;
-			flechaPressao.comp = state.f2.c;
-			flechaPressao.angle = state.f2.a;
+			for (var i:int = 0; i < state.fg.l; i++) 
+			{
+				var newFg:Flechinha = new Flechinha(corGravidade);
+				newFg.x = state.fg[i].x;
+				newFg.y = state.fg[i].y;
+				//newFg.comp = state.fg[i].c;
+				newFg.angle = state.fg[i].a;
+				flechasG.push(newFg);
+				layer_flechas.addChild(newFg);
+			}
+			
+			for (i = 0; i < state.fp.l; i++) 
+			{
+				var newFp:Flechinha = new Flechinha(corPressao);
+				newFp.x = state.fp[i].x;
+				newFp.y = state.fp[i].y;
+				//newFp.comp = state.fp[i].c;
+				newFp.angle = state.fp[i].a;
+				flechasP.push(newFp);
+				layer_flechas.addChild(newFp);
+			}
 			
 			campo1.x = state.c1.x;
 			campo1.y = state.c1.y;
 			
 			campo2.x = state.c2.x;
 			campo2.y = state.c2.y;
+		}
+		
+		private function reset():void
+		{
+			if (flechasG.length > 0) {
+				for each (var itemG:Flechinha in flechasG) 
+				{
+					layer_flechas.removeChild(itemG);
+				}
+			}
+			
+			if (flechasP.length > 0) {
+				for each (var itemP:Flechinha in flechasP) 
+				{
+					layer_flechas.removeChild(itemP);
+				}
+			}
+			
+			flechasG.splice(0, flechasG.length);
+			flechasP.splice(0, flechasP.length);
+			
+			campo1.x = 350;
+			campo1.y = 300;
+			
+			campo2.x = 350;
+			campo2.y = 400;
 		}
 		
 	}
