@@ -1,3 +1,3 @@
-h1. Pressão de radiação _versus_ gravidade
+h1. Pressão térmica e de radiação _versus_ gravidade
 
 Figura interativa na qual o usuário deve posicionar as flechas que representam a força associada à pressão de radiação numa estrela, originária das reações nucleares, e a força gravitacional. O equilíbrio entre essas duas forças define o tamanho da estrela.
