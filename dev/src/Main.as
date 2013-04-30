@@ -1,5 +1,6 @@
 package 
 {
+	import BaseAssets.status.SaveAPI;
 	import flash.display.Sprite;
 	import flash.events.Event;
 	import flash.events.KeyboardEvent;
@@ -13,8 +14,8 @@ package
 	 */
 	public class Main extends Sprite 
 	{
-		private const corGravidade:uint = 0xDD0000;
-		private const corPressao:uint = 0x0000FF;
+		private const corGravidade:uint = 0xFF6600;
+		private const corPressao:uint = 0x00CCFF;
 		
 		private var layer_moldura:Sprite = new Sprite();
 		private var layer_flechas:Sprite = new Sprite();
@@ -24,9 +25,13 @@ package
 		
 		private var campo1:Campo = new CampoG();
 		private var campo2:Campo = new CampoP();
+		private var campo1ghost:CampoGG = new CampoGG();
+		private var campo2ghost:CampoPG = new CampoPG();
 		
 		private var flechasG:Vector.<Flechinha> = new Vector.<Flechinha>();
 		private var flechasP:Vector.<Flechinha> = new Vector.<Flechinha>();
+		
+		private var saveAPI:SaveAPI;
 		
 		public function Main():void 
 		{
@@ -42,10 +47,10 @@ package
 			this.scrollRect = new Rectangle(0, 0, 600, 500);
 			
 			flechaGravidade.x = 60;
-			flechaGravidade.y = 465;
+			flechaGravidade.y = 475;
 			
 			flechaPressao.x = 180;
-			flechaPressao.y = 465;
+			flechaPressao.y = 475;
 			
 			addChild(flechaGravidade);
 			addChild(flechaPressao);
@@ -55,10 +60,18 @@ package
 			
 			campo1.x = 360;
 			campo1.y = 465;
+			campo1.addEventListener("modificado", saveStatus);
+			campo1ghost.x = campo1.x;
+			campo1ghost.y = campo1.y;
 			
 			campo2.x = 510;
 			campo2.y = 465;
+			campo2.addEventListener("modificado", saveStatus);
+			campo2ghost.x = campo2.x;
+			campo2ghost.y = campo2.y;
 			
+			addChild(campo1ghost);
+			addChild(campo2ghost);
 			addChild(campo1);
 			addChild(campo2);
 			addChild(layer_flechas);
@@ -70,8 +83,14 @@ package
 			layer_moldura.graphics.lineTo(0, 0);
 			addChild(layer_moldura);
 			
+			//stage.addEventListener(KeyboardEvent.KEY_UP, keyboardHandler);
 			
-			stage.addEventListener(KeyboardEvent.KEY_UP, keyboardHandler);
+			saveAPI = new SaveAPI();
+			var status:Object = saveAPI.recoverStatus();
+			
+			if (status != null) {
+				recoverState(status);
+			}
 		}
 		
 		private var flechaDrag:Flechinha;
@@ -85,6 +104,7 @@ package
 				newFlecha = new Flechinha(corPressao);
 				flechasP.push(newFlecha);
 			}
+			newFlecha.addEventListener("modificado", saveStatus);
 			flechaDrag = newFlecha;
 			flechaDrag.x = stage.mouseX;
 			flechaDrag.y = stage.mouseY;
@@ -94,17 +114,59 @@ package
 			stage.addEventListener(MouseEvent.MOUSE_UP, stopMoveFlecha);
 		}
 		
+		private function saveStatus(e:Event = null):void 
+		{
+			if(e != null){
+				if(e.target.y > 440){
+					if (e.target is Flechinha) {
+						var flechinha:Flechinha = Flechinha(e.target);
+						flechinha.removeOverEL();
+						layer_flechas.removeChild(flechinha);
+						var ind:int = flechasG.indexOf(flechinha);
+						if (ind > -1) flechasG.splice(ind, 1);
+						else {
+							ind = flechasP.indexOf(flechinha);
+							if (ind > -1) flechasP.splice(ind, 1);
+						}
+					}else {
+						if (e.target == campo1) {
+							campo1.x = 360;
+							campo1.y = 465;
+						}else{
+							campo2.x = 510;
+							campo2.y = 465;
+						}
+					}
+				}
+			}
+			saveAPI.saveStatus(getstate());
+		}
+		
+		private var margin:Number = 10;
 		private function moveNewFlecha(e:MouseEvent):void 
 		{
-			flechaDrag.x = stage.mouseX;
-			flechaDrag.y = stage.mouseY;
+			flechaDrag.x = Math.max(margin ,Math.min(600-margin ,stage.mouseX));
+			flechaDrag.y = Math.max(margin ,Math.min(500-margin ,stage.mouseY));
 		}
 		
 		private function stopMoveFlecha(e:MouseEvent):void 
 		{
 			stage.removeEventListener(MouseEvent.MOUSE_MOVE, moveNewFlecha);
 			stage.removeEventListener(MouseEvent.MOUSE_UP, stopMoveFlecha);
+			
+			if (flechaDrag.y > 440) {
+				flechaDrag.removeOverEL();
+				layer_flechas.removeChild(flechaDrag);
+				var ind:int = flechasG.indexOf(flechaDrag);
+				if (ind > -1) flechasG.splice(ind, 1);
+				else {
+					ind = flechasP.indexOf(flechaDrag);
+					if (ind > -1) flechasP.splice(ind, 1);
+				}
+			}
 			flechaDrag = null;
+			
+			saveStatus();
 		}
 		
 		private var state:Object;
@@ -163,6 +225,7 @@ package
 			for (var i:int = 0; i < state.fg.l; i++) 
 			{
 				var newFg:Flechinha = new Flechinha(corGravidade);
+				newFg.addEventListener("modificado", saveStatus);
 				newFg.x = state.fg[i].x;
 				newFg.y = state.fg[i].y;
 				//newFg.comp = state.fg[i].c;
@@ -174,6 +237,7 @@ package
 			for (i = 0; i < state.fp.l; i++) 
 			{
 				var newFp:Flechinha = new Flechinha(corPressao);
+				newFp.addEventListener("modificado", saveStatus);
 				newFp.x = state.fp[i].x;
 				newFp.y = state.fp[i].y;
 				//newFp.comp = state.fp[i].c;

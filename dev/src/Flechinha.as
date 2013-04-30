@@ -1,8 +1,11 @@
 package  
 {
+	import flash.display.MovieClip;
 	import flash.display.Sprite;
+	import flash.events.Event;
 	import flash.events.MouseEvent;
 	import flash.geom.Point;
+	import flash.ui.Mouse;
 	/**
 	 * ...
 	 * @author Alexandre
@@ -14,6 +17,7 @@ package
 		private var _comp:Number = 50;
 		private var _angle:Number = 0;
 		private var cor:uint;
+		private var newMouseForm:MovieClip;
 		
 		public function Flechinha(cor:uint, movable:Boolean = true) 
 		{
@@ -53,6 +57,79 @@ package
 			
 			head.addEventListener(MouseEvent.MOUSE_DOWN, initDrag);
 			body.addEventListener(MouseEvent.MOUSE_DOWN, initDrag);
+			
+			addOverEL();
+		}
+		
+		private function addOverEL():void
+		{
+			head.addEventListener(MouseEvent.MOUSE_OVER, overHead);
+			body.addEventListener(MouseEvent.MOUSE_OVER, overBody);
+		}
+		
+		public function removeOverEL():void
+		{
+			head.removeEventListener(MouseEvent.MOUSE_OVER, overHead);
+			body.removeEventListener(MouseEvent.MOUSE_OVER, overBody);
+			
+			head.removeEventListener(MouseEvent.MOUSE_OUT, outHeadBody);
+			body.removeEventListener(MouseEvent.MOUSE_OUT, outHeadBody);
+			
+			if (newMouseForm != null) {
+				newMouseForm.stopDrag();
+				stage.removeChild(newMouseForm);
+				newMouseForm = null;
+				Mouse.show();
+			}
+		}
+		
+		private function overHead(e:MouseEvent):void 
+		{
+			Mouse.hide();
+			newMouseForm = new RotateForm();
+			newMouseForm.mouseEnabled = false;
+			newMouseForm.x = stage.mouseX;
+			newMouseForm.y = stage.mouseY;
+			rotateCursor(null);
+			newMouseForm.startDrag();
+			stage.addChild(newMouseForm);
+			stage.addEventListener(MouseEvent.MOUSE_MOVE, rotateCursor);
+			//removeOverEL();
+			head.addEventListener(MouseEvent.MOUSE_OUT, outHeadBody);
+			//dispatchEvent(new Event("overHead", true));
+			
+		}
+		
+		private function rotateCursor(e:MouseEvent):void 
+		{
+			newMouseForm.rotation = 90 + Math.atan2(this.mouseY, this.mouseX) * 180/Math.PI;
+		}
+		
+		private function overBody(e:MouseEvent):void 
+		{
+			Mouse.hide();
+			newMouseForm = new MoveForm();
+			newMouseForm.mouseEnabled = false;
+			newMouseForm.x = stage.mouseX;
+			newMouseForm.y = stage.mouseY;
+			newMouseForm.startDrag();
+			stage.addChild(newMouseForm);
+			//removeOverEL();
+			body.addEventListener(MouseEvent.MOUSE_OUT, outHeadBody);
+			//dispatchEvent(new Event("overBody", true));
+		}
+		
+		private function outHeadBody(e:MouseEvent):void
+		{
+			head.removeEventListener(MouseEvent.MOUSE_OUT, outHeadBody);
+			body.removeEventListener(MouseEvent.MOUSE_OUT, outHeadBody);
+			stage.removeEventListener(MouseEvent.MOUSE_MOVE, rotateCursor);
+			//dispatchEvent(new Event("outHB", true));
+			//addOverEL();
+			newMouseForm.stopDrag();
+			stage.removeChild(newMouseForm);
+			newMouseForm = null;
+			Mouse.show();
 		}
 		
 		private var drag:Sprite;
@@ -66,11 +143,12 @@ package
 			stage.addEventListener(MouseEvent.MOUSE_UP, stopDragg);
 		}
 		
+		private var margin:Number = 10;
 		private function dragging(e:MouseEvent):void 
 		{
 			if (drag == body) {
-				this.x = this.parent.mouseX - localPosClick.x;
-				this.y = this.parent.mouseY - localPosClick.y;
+				this.x = Math.max(margin ,Math.min(600-margin ,this.parent.mouseX - localPosClick.x));
+				this.y = Math.max(margin , Math.min(500-margin ,this.parent.mouseY - localPosClick.y));
 			}else {
 				//head.x = this.mouseX;
 				//head.y = this.mouseY;
@@ -86,6 +164,7 @@ package
 			stage.removeEventListener(MouseEvent.MOUSE_UP, stopDragg);
 			draw();
 			drag = null;
+			dispatchEvent(new Event("modificado", true));
 		}
 		
 		private function draw():void 

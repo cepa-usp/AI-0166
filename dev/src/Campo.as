@@ -1,6 +1,7 @@
 package  
 {
 	import flash.display.Sprite;
+	import flash.events.Event;
 	import flash.events.MouseEvent;
 	import flash.geom.Point;
 	import flash.text.TextField;
@@ -45,16 +46,18 @@ package
 			stage.addEventListener(MouseEvent.MOUSE_UP, stopDragg);
 		}
 		
+		private var margin:Number = 10;
 		private function dragging(e:MouseEvent):void 
 		{
-			this.x = this.parent.mouseX - localPosClick.x;
-			this.y = this.parent.mouseY - localPosClick.y;
+			this.x = Math.max(margin ,Math.min(600-margin ,this.parent.mouseX - localPosClick.x));
+			this.y = Math.max(margin , Math.min(500-margin ,this.parent.mouseY - localPosClick.y));
 		}
 		
 		private function stopDragg(e:MouseEvent):void 
 		{
 			stage.removeEventListener(MouseEvent.MOUSE_MOVE, dragging);
 			stage.removeEventListener(MouseEvent.MOUSE_UP, stopDragg);
+			dispatchEvent(new Event("modificado", true));
 		}
 		
 	}
