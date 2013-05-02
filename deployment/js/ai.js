@@ -17,8 +17,8 @@ function init () {
   // ATENÇÃO: os callbacks registrados via ExternalInterface no Main.swf levam algum tempo para ficarem disponíveis para o Javascript. Por isso não é possível chamá-los imediatamente após a inserção do filme Flash na página HTML.  
 	var flashvars = {};
 	flashvars.ai = "swf/AI-" + aiNumber + ".swf";
-	flashvars.width = "700";
-	flashvars.height = "600";
+	flashvars.width = "560";
+	flashvars.height = "480";
 	//flashvars.forma = query.forma;
 	
 	var params = {};
