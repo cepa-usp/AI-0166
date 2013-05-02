@@ -116,8 +116,12 @@ package
 		
 		private function saveStatus(e:Event = null):void 
 		{
-			if(e != null){
-				if(e.target.y > 440){
+			if (e != null) {
+				var boundBox:Rectangle = e.target.getBounds(stage);
+			
+				if (boundBox.x + boundBox.width / 2 < 0 || boundBox.x + boundBox.width/2 > 600 ||
+					boundBox.y + boundBox.height / 2 < 0 || boundBox.y + boundBox.height/2 > 440){
+				//if(e.target.y > 440){
 					if (e.target is Flechinha) {
 						var flechinha:Flechinha = Flechinha(e.target);
 						flechinha.removeOverEL();
@@ -145,8 +149,13 @@ package
 		private var margin:Number = 10;
 		private function moveNewFlecha(e:MouseEvent):void 
 		{
-			flechaDrag.x = Math.max(margin ,Math.min(600-margin ,stage.mouseX));
-			flechaDrag.y = Math.max(margin ,Math.min(500-margin ,stage.mouseY));
+			if(flechaDrag.lockInside){
+				flechaDrag.x = Math.max(margin ,Math.min(600-margin ,stage.mouseX));
+				flechaDrag.y = Math.max(margin , Math.min(500 - margin , stage.mouseY));
+			}else {
+				flechaDrag.x = stage.mouseX;
+				flechaDrag.y = stage.mouseY;
+			}
 		}
 		
 		private function stopMoveFlecha(e:MouseEvent):void 
@@ -154,7 +163,11 @@ package
 			stage.removeEventListener(MouseEvent.MOUSE_MOVE, moveNewFlecha);
 			stage.removeEventListener(MouseEvent.MOUSE_UP, stopMoveFlecha);
 			
-			if (flechaDrag.y > 440) {
+			var boundBox:Rectangle = flechaDrag.getBounds(stage);
+			
+			if (boundBox.x + boundBox.width / 2 < 0 || boundBox.x + boundBox.width/2 > 600 ||
+				boundBox.y + boundBox.height / 2 < 0 || boundBox.y + boundBox.height/2 > 440){
+			//if (flechaDrag.y > 440) {
 				flechaDrag.removeOverEL();
 				layer_flechas.removeChild(flechaDrag);
 				var ind:int = flechasG.indexOf(flechaDrag);

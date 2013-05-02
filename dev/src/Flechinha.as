@@ -18,6 +18,7 @@ package
 		private var _angle:Number = 0;
 		private var cor:uint;
 		private var newMouseForm:MovieClip;
+		private var corContorno:uint = 0x000000;
 		
 		public function Flechinha(cor:uint, movable:Boolean = true) 
 		{
@@ -41,7 +42,7 @@ package
 			head.graphics.endFill();
 			
 			head.graphics.beginFill(cor, 1);
-			head.graphics.lineStyle(1, cor);
+			head.graphics.lineStyle(1, corContorno);
 			head.graphics.moveTo(0, 0);
 			head.graphics.lineTo(0, 5);
 			head.graphics.lineTo(15, 0);
@@ -143,18 +144,25 @@ package
 			stage.addEventListener(MouseEvent.MOUSE_UP, stopDragg);
 		}
 		
+		private var _lockInside:Boolean = false;
 		private var margin:Number = 10;
 		private function dragging(e:MouseEvent):void 
 		{
 			if (drag == body) {
-				this.x = Math.max(margin ,Math.min(600-margin ,this.parent.mouseX - localPosClick.x));
-				this.y = Math.max(margin , Math.min(500-margin ,this.parent.mouseY - localPosClick.y));
+				if(_lockInside){
+					this.x = Math.max(margin ,Math.min(600-margin ,this.parent.mouseX - localPosClick.x));
+					this.y = Math.max(margin , Math.min(500 - margin , this.parent.mouseY - localPosClick.y));
+				}else {
+					this.x = this.parent.mouseX - localPosClick.x;
+					this.y = this.parent.mouseY - localPosClick.y;
+				}
 			}else {
 				//head.x = this.mouseX;
 				//head.y = this.mouseY;
 				_angle = Math.atan2(this.mouseY - body.y, this.mouseX - body.x);
 				updateHeadPos();
 				draw();
+				//this.rotation = _angle * 180 / Math.PI;
 			}
 		}
 		
@@ -175,6 +183,10 @@ package
 			body.graphics.clear();
 			
 			body.graphics.lineStyle(30, 0xFF8080, 0);
+			body.graphics.moveTo(0, 0);
+			body.graphics.lineTo(head.x, head.y);
+			
+			body.graphics.lineStyle(4, corContorno);
 			body.graphics.moveTo(0, 0);
 			body.graphics.lineTo(head.x, head.y);
 			
@@ -207,6 +219,11 @@ package
 			_angle = value;
 			updateHeadPos();
 			draw();
+		}
+		
+		public function get lockInside():Boolean 
+		{
+			return _lockInside;
 		}
 		
 		private function updateHeadPos():void

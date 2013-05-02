@@ -49,8 +49,8 @@ package
 		private var margin:Number = 10;
 		private function dragging(e:MouseEvent):void 
 		{
-			this.x = Math.max(margin ,Math.min(600-margin ,this.parent.mouseX - localPosClick.x));
-			this.y = Math.max(margin , Math.min(500-margin ,this.parent.mouseY - localPosClick.y));
+			this.x = this.parent.mouseX - localPosClick.x;
+			this.y = this.parent.mouseY - localPosClick.y;
 		}
 		
 		private function stopDragg(e:MouseEvent):void 
